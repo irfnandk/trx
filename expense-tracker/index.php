@@ -385,6 +385,10 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             cursor: pointer;
         }
 
+        .btn-select:active {
+            transform: scale(0.95);
+        }
+
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -437,11 +441,12 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
         }
 
         .transaction-checkbox {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             display: none;
             margin-right: 4px;
             accent-color: #3b82f6;
+            cursor: pointer;
         }
 
         .transaction-date {
@@ -897,11 +902,12 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
     </div>
     <?php endif; ?>
 
+    <!-- Recent Transactions -->
     <div class="recent-section">
         <div class="section-header">
             <h3>Transaksi Terbaru</h3>
             <div>
-                <button class="btn-select" onclick="toggleSelectMode()">Pilih</button>
+                <button class="btn-select" id="selectModeBtn" onclick="toggleSelectMode()">Pilih</button>
                 <a href="report.php" class="view-all">Lihat Semua</a>
             </div>
         </div>
@@ -917,7 +923,7 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
                     <?php foreach ($recent_expenses as $e): ?>
                         <div class="transaction-item" data-id="<?php echo $e['id']; ?>">
                             <div class="transaction-left">
-                                <input type="checkbox" name="ids[]" value="<?php echo $e['id']; ?>" class="transaction-checkbox">
+                                <input type="checkbox" name="ids[]" value="<?php echo $e['id']; ?>" class="transaction-checkbox" id="cb_<?php echo $e['id']; ?>">
                                 <div class="transaction-date">
                                     <span class="date-day"><?php echo date('d', strtotime($e['expense_date'])); ?></span>
                                     <span class="date-month"><?php echo date('M', strtotime($e['expense_date'])); ?></span>
@@ -945,7 +951,7 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             </div>
             
             <div id="multiSelectActions" style="display: none;">
-                <button type="submit" class="action-btn secondary">Cetak Gabungan</button>
+                <button type="submit" class="action-btn secondary" id="cetakGabunganBtn">Cetak Gabungan</button>
                 <button type="button" class="action-btn secondary" onclick="cancelMultiSelect()">Batal</button>
             </div>
         </form>
@@ -1034,10 +1040,14 @@ function toggleSelectMode() {
     selectMode = !selectMode;
     const checkboxes = document.querySelectorAll('.transaction-checkbox');
     const actions = document.getElementById('multiSelectActions');
-    const btn = document.querySelector('.btn-select');
+    const btn = document.getElementById('selectModeBtn');
     
     checkboxes.forEach(cb => {
         cb.style.display = selectMode ? 'inline-block' : 'none';
+        if (!selectMode) {
+            cb.checked = false;
+            cb.closest('.transaction-item')?.classList.remove('selected');
+        }
     });
     
     actions.style.display = selectMode ? 'flex' : 'none';
@@ -1046,17 +1056,20 @@ function toggleSelectMode() {
 
 function cancelMultiSelect() {
     const checkboxes = document.querySelectorAll('.transaction-checkbox');
+    const btn = document.getElementById('selectModeBtn');
+    
     checkboxes.forEach(cb => {
         cb.checked = false;
         cb.style.display = 'none';
         cb.closest('.transaction-item')?.classList.remove('selected');
     });
+    
     document.getElementById('multiSelectActions').style.display = 'none';
     selectMode = false;
-    const btn = document.querySelector('.btn-select');
     btn.textContent = 'Pilih';
 }
 
+// Highlight selected transaction when checkbox checked
 document.addEventListener('change', function(e) {
     if (e.target.classList.contains('transaction-checkbox')) {
         const item = e.target.closest('.transaction-item');
@@ -1068,6 +1081,7 @@ document.addEventListener('change', function(e) {
     }
 });
 
+// Close menu when clicking outside
 document.addEventListener('click', function(event) {
     const menu = document.getElementById('menuDropdown');
     const menuBtn = document.querySelector('.menu-btn');
@@ -1076,6 +1090,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
+// Auto show form if editing
 <?php if ($edit_data): ?>
 window.addEventListener('load', function() {
     showForm('add');
