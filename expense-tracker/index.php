@@ -225,7 +225,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             height: 44px;
             border-radius: 12px;
             font-size: 20px;
-            font-weight: 500;
             cursor: pointer;
             color: #1e293b;
             display: flex;
@@ -1058,7 +1057,6 @@ function cancelMultiSelect() {
     btn.textContent = 'Pilih';
 }
 
-// Highlight selected transaction
 document.addEventListener('change', function(e) {
     if (e.target.classList.contains('transaction-checkbox')) {
         const item = e.target.closest('.transaction-item');
@@ -1070,7 +1068,6 @@ document.addEventListener('change', function(e) {
     }
 });
 
-// Close menu when clicking outside
 document.addEventListener('click', function(event) {
     const menu = document.getElementById('menuDropdown');
     const menuBtn = document.querySelector('.menu-btn');
