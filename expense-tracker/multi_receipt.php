@@ -5,17 +5,15 @@ require_once 'includes/header.php';
 $db = getDB();
 
 // Get selected transaction IDs
-$ids = isset($_GET['ids']) ? $_GET['ids'] : '';
-$ids_array = $ids ? explode(',', $ids) : [];
-
-if (empty($ids_array) && isset($_POST['ids'])) {
-    $ids_array = $_POST['ids'];
+$ids = isset($_GET['ids']) ? $_GET['ids'] : [];
+if (!is_array($ids)) {
+    $ids = explode(',', $ids);
 }
 
 // Get expenses data
 $expenses = [];
 $total_semua = 0;
-foreach ($ids_array as $id) {
+foreach ($ids as $id) {
     $expense = $db->getExpense(intval($id));
     if ($expense) {
         $expenses[] = $expense;
@@ -52,7 +50,7 @@ $sisa_saldo = $saldo_awal - $total_pengeluaran;
             align-items: center;
             justify-content: center;
         }
-        .struk-container { max-width: 320px; width: 100%; margin: 0 auto; }
+        .struk-container { max-width: 350px; width: 100%; margin: 0 auto; }
         .struk { background: white; padding: 16px 14px; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .struk-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
         .struk-title { font-size: 14px; font-weight: bold; text-transform: uppercase; }
@@ -61,20 +59,19 @@ $sisa_saldo = $saldo_awal - $total_pengeluaran;
         .divider { border-top: 1px dashed #000; margin: 8px 0; }
         .item-header { display: flex; justify-content: space-between; font-size: 9px; font-weight: bold; margin: 8px 0 6px; border-bottom: 1px dotted #000; padding-bottom: 3px; }
         .item-name-header { flex: 2; text-align: left; }
-        .item-price-header { width: 70px; text-align: right; }
+        .item-price-header { width: 80px; text-align: right; }
         .item-row { display: flex; justify-content: space-between; font-size: 9px; margin-bottom: 4px; }
         .item-name { flex: 2; text-align: left; word-break: break-word; }
-        .item-price { width: 70px; text-align: right; }
+        .item-price { width: 80px; text-align: right; }
         .item-desc { font-size: 8px; color: #666; margin-left: 6px; margin-bottom: 6px; border-left: 2px solid #ccc; padding-left: 6px; }
         .total-row { display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin: 10px 0 8px; padding-top: 6px; border-top: 1px dashed #000; }
         .grand-total { background: #f0f0f0; padding: 8px; margin: 10px 0; font-weight: bold; border: 1px solid #ccc; }
         .struk-footer { text-align: center; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #000; }
-        .barcode { font-family: monospace; letter-spacing: 1px; font-size: 12px; margin: 8px 0; }
         .thankyou { font-size: 10px; font-weight: bold; margin: 8px 0; text-transform: uppercase; }
         .footer-note { font-size: 8px; color: #666; margin: 6px 0; }
         .datetime { font-size: 7px; margin: 6px 0; color: #888; }
         .watermark { font-size: 7px; color: #ccc; margin-top: 6px; }
-        .button-group { display: flex; gap: 8px; margin-top: 16px; max-width: 320px; width: 100%; }
+        .button-group { display: flex; gap: 8px; margin-top: 16px; width: 100%; }
         .btn { flex: 1; padding: 10px 8px; border: 1px solid #333; background: white; font-size: 11px; font-family: monospace; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; color: #333; border-radius: 2px; }
         .btn:active { background: #f0f0f0; transform: scale(0.97); }
         .selected-info { background: #f5f5f5; padding: 8px; margin-bottom: 12px; text-align: center; font-size: 9px; border: 1px solid #ccc; }
@@ -107,8 +104,8 @@ $sisa_saldo = $saldo_awal - $total_pengeluaran;
         <div class="divider"></div>
 
         <div class="item-header">
-            <span class="item-name-header">Tanggal & Item</span>
-            <span class="item-price-header">Total</span>
+            <span class="item-name-header">Tanggal & Keterangan</span>
+            <span class="item-price-header">Nominal</span>
         </div>
 
         <?php foreach ($expenses as $e): ?>
@@ -131,7 +128,6 @@ $sisa_saldo = $saldo_awal - $total_pengeluaran;
         </div>
 
         <div class="struk-footer">
-            <div class="barcode"><?php echo date('YmdHis'); ?></div>
             <div class="thankyou">TERIMA KASIH</div>
             <div class="footer-note">Barang yang sudah dibeli<br>tidak dapat dikembalikan</div>
             <div class="datetime"><?php echo date('d/m/Y H:i:s'); ?></div>
