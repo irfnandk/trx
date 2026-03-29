@@ -13,7 +13,8 @@ class SupabaseDB {
         $this->headers = [
             "Content-Type: application/json",
             "Authorization: Bearer " . $this->api_key,
-            "apikey: " . $this->api_key
+            "apikey: " . $this->api_key,
+            "Prefer: return=representation"
         ];
     }
 
