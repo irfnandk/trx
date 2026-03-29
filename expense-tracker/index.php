@@ -184,8 +184,8 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8fafc;
-            color: #0f172a;
+            background: #f5f7fb;
+            color: #1e293b;
             line-height: 1.5;
         }
 
@@ -196,7 +196,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             min-height: 100vh;
         }
 
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -207,7 +206,10 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
         .header h1 {
             font-size: 28px;
             font-weight: 700;
-            color: #0f172a;
+            background: linear-gradient(135deg, #1e293b, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .header-date {
@@ -237,7 +239,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             transform: scale(0.95);
         }
 
-        /* Menu Dropdown */
         .menu-dropdown {
             display: none;
             background: white;
@@ -276,7 +277,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             color: #0f172a;
         }
 
-        /* Saldo Card */
         .saldo-card {
             background: linear-gradient(135deg, #0f172a, #1e293b);
             color: white;
@@ -309,7 +309,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             border-top: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -339,7 +338,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             color: #0f172a;
         }
 
-        /* Quick Actions */
         .quick-actions {
             display: flex;
             gap: 12px;
@@ -357,6 +355,10 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             cursor: pointer;
             border: none;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .action-btn:active {
@@ -374,149 +376,14 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             border: 1px solid #e2e8f0;
         }
 
-        /* Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: flex-end;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            width: 100%;
-            border-radius: 24px 24px 0 0;
-            padding: 24px 20px 32px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .modal-header h3 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-        .modal-close {
+        .btn-select {
             background: none;
             border: none;
-            font-size: 24px;
-            color: #94a3b8;
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-        }
-
-        .modal-close:active {
-            background: #f1f5f9;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #334155;
-            margin-bottom: 8px;
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            background: #f8fafc;
-            transition: all 0.2s;
-        }
-
-        .modal-input:focus {
-            outline: none;
-            border-color: #0f172a;
-            background: white;
-        }
-
-        select.modal-input {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            padding-right: 44px;
-        }
-
-        .print-option {
-            margin: 20px 0;
-            padding: 12px;
-            background: #f8fafc;
-            border-radius: 12px;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-        }
-
-        .checkbox-label input {
-            width: 18px;
-            height: 18px;
-            accent-color: #0f172a;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 40px;
-            font-size: 16px;
+            color: #3b82f6;
+            font-size: 13px;
             font-weight: 600;
+            padding: 6px 12px;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .modal-btn:active {
-            transform: scale(0.97);
-        }
-
-        .modal-btn.primary {
-            background: #0f172a;
-            color: white;
-        }
-
-        .modal-btn.secondary {
-            background: #f1f5f9;
-            color: #0f172a;
-        }
-
-        /* Recent Section */
-        .recent-section {
-            margin-top: 24px;
         }
 
         .section-header {
@@ -533,7 +400,7 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
         }
 
         .view-all {
-            color: #0f172a;
+            color: #3b82f6;
             text-decoration: none;
             font-size: 13px;
             font-weight: 500;
@@ -541,11 +408,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             border-radius: 20px;
         }
 
-        .view-all:active {
-            background: #f1f5f9;
-        }
-
-        /* Transaction List */
         .transaction-list {
             background: white;
             border-radius: 20px;
@@ -564,10 +426,23 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             border-bottom: none;
         }
 
+        .transaction-item.selected {
+            background: #e8f0fe;
+        }
+
         .transaction-left {
             display: flex;
             gap: 12px;
             flex: 1;
+            align-items: center;
+        }
+
+        .transaction-checkbox {
+            width: 18px;
+            height: 18px;
+            display: none;
+            margin-right: 4px;
+            accent-color: #3b82f6;
         }
 
         .transaction-date {
@@ -619,7 +494,7 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
 
         .action-edit, .action-delete, .action-print {
             text-decoration: none;
-            font-size: 13px;
+            font-size: 12px;
             padding: 4px 10px;
             border-radius: 6px;
             font-weight: 500;
@@ -631,8 +506,8 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
         }
 
         .action-print {
-            background: #f1f5f9;
-            color: #0f172a;
+            background: #e8f0fe;
+            color: #3b82f6;
         }
 
         .action-delete {
@@ -640,7 +515,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             color: #dc2626;
         }
 
-        /* Insight Card */
         .insight-card {
             background: #fef9e3;
             border-radius: 16px;
@@ -662,7 +536,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             color: #78350f;
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 48px 24px;
@@ -676,7 +549,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             margin-bottom: 8px;
         }
 
-        /* Notification */
         .notification {
             padding: 14px 16px;
             border-radius: 12px;
@@ -710,6 +582,140 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
             color: inherit;
             opacity: 0.7;
             padding: 8px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: flex-end;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px 32px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #94a3b8;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #f8fafc;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        select.modal-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 44px;
+        }
+
+        .print-option {
+            margin: 20px 0;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            width: 18px;
+            height: 18px;
+            accent-color: #0f172a;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-btn.primary {
+            background: #0f172a;
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        #multiSelectActions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
         }
 
         small {
@@ -895,93 +901,103 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 5) : [];
     <div class="recent-section">
         <div class="section-header">
             <h3>Transaksi Terbaru</h3>
-            <a href="report.php" class="view-all">Lihat Semua →</a>
+            <div>
+                <button class="btn-select" onclick="toggleSelectMode()">Pilih</button>
+                <a href="report.php" class="view-all">Lihat Semua</a>
+            </div>
         </div>
 
-        <?php if (empty($recent_expenses)): ?>
-            <div class="empty-state">
-                <p>Belum ada transaksi</p>
-                <p style="font-size: 12px;">Klik tombol Tambah untuk mencatat pengeluaran</p>
-            </div>
-        <?php else: ?>
+        <form method="GET" action="multi_receipt.php" id="multiSelectForm">
             <div class="transaction-list">
-                <?php foreach ($recent_expenses as $e): ?>
-                    <div class="transaction-item">
-                        <div class="transaction-left">
-                            <div class="transaction-date">
-                                <span class="date-day"><?php echo date('d', strtotime($e['expense_date'])); ?></span>
-                                <span class="date-month"><?php echo date('M', strtotime($e['expense_date'])); ?></span>
-                            </div>
-                            <div>
-                                <div class="transaction-category">
-                                    <?php echo isset($categories_map[$e['category_id']]) ? htmlspecialchars($categories_map[$e['category_id']]) : 'Lainnya'; ?>
-                                </div>
-                                <?php if (!empty($e['description'])): ?>
-                                <div class="transaction-desc"><?php echo htmlspecialchars($e['description']); ?></div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <div class="transaction-right">
-                            <div class="transaction-amount">Rp <?php echo number_format($e['amount'] ?? 0, 0, ',', '.'); ?></div>
-                            <div class="transaction-actions">
-                                <a href="?edit=<?php echo $e['id']; ?>" class="action-edit">Edit</a>
-                                <a href="receipt.php?id=<?php echo $e['id']; ?>" class="action-print" target="_blank">Cetak</a>
-                                <a href="?delete=<?php echo $e['id']; ?>" class="action-delete" onclick="return confirm('Hapus transaksi ini?')">Hapus</a>
-                            </div>
-                        </div>
+                <?php if (empty($recent_expenses)): ?>
+                    <div class="empty-state">
+                        <p>Belum ada transaksi</p>
+                        <p style="font-size: 12px;">Klik tombol Tambah untuk mencatat pengeluaran</p>
                     </div>
-                <?php endforeach; ?>
+                <?php else: ?>
+                    <?php foreach ($recent_expenses as $e): ?>
+                        <div class="transaction-item" data-id="<?php echo $e['id']; ?>">
+                            <div class="transaction-left">
+                                <input type="checkbox" name="ids[]" value="<?php echo $e['id']; ?>" class="transaction-checkbox">
+                                <div class="transaction-date">
+                                    <span class="date-day"><?php echo date('d', strtotime($e['expense_date'])); ?></span>
+                                    <span class="date-month"><?php echo date('M', strtotime($e['expense_date'])); ?></span>
+                                </div>
+                                <div class="transaction-info">
+                                    <div class="transaction-category">
+                                        <?php echo isset($categories_map[$e['category_id']]) ? $categories_map[$e['category_id']] : 'Lainnya'; ?>
+                                    </div>
+                                    <?php if (!empty($e['description'])): ?>
+                                        <div class="transaction-desc"><?php echo htmlspecialchars($e['description']); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="transaction-right">
+                                <div class="transaction-amount">Rp <?php echo number_format($e['amount'] ?? 0, 0, ',', '.'); ?></div>
+                                <div class="transaction-actions">
+                                    <a href="?edit=<?php echo $e['id']; ?>" class="action-edit">Edit</a>
+                                    <a href="receipt.php?id=<?php echo $e['id']; ?>" class="action-print" target="_blank">Struk</a>
+                                    <a href="?delete=<?php echo $e['id']; ?>" class="action-delete" onclick="return confirm('Hapus transaksi ini?')">Hapus</a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
-            <?php if ($pengeluaran_terbesar > 0): ?>
-            <div class="insight-card">
-                <div class="insight-label">Pengeluaran Terbesar</div>
-                <div class="insight-value">Rp <?php echo number_format($pengeluaran_terbesar, 0, ',', '.'); ?></div>
+            
+            <div id="multiSelectActions" style="display: none;">
+                <button type="submit" class="action-btn secondary">Cetak Gabungan</button>
+                <button type="button" class="action-btn secondary" onclick="cancelMultiSelect()">Batal</button>
             </div>
-            <?php endif; ?>
+        </form>
+
+        <?php if ($pengeluaran_terbesar > 0): ?>
+        <div class="insight-card">
+            <div class="insight-label">Pengeluaran Terbesar</div>
+            <div class="insight-value">Rp <?php echo number_format($pengeluaran_terbesar, 0, ',', '.'); ?></div>
+        </div>
         <?php endif; ?>
     </div>
 </div>
 
 <script>
+let selectMode = false;
+
 function toggleMenu() {
-    var menu = document.getElementById('menuDropdown');
+    const menu = document.getElementById('menuDropdown');
     if (menu) {
-        if (menu.style.display === 'none' || menu.style.display === '') {
-            menu.style.display = 'block';
-        } else {
-            menu.style.display = 'none';
-        }
+        menu.classList.toggle('show');
     }
 }
 
 function showForm(type) {
-    var formId = '';
+    let formId = '';
     if (type === 'add') formId = 'formAdd';
     else if (type === 'tambahSaldo') formId = 'formTambahSaldo';
     else if (type === 'aturSaldo') formId = 'formAturSaldo';
     
-    var form = document.getElementById(formId);
+    const form = document.getElementById(formId);
     if (form) {
         form.style.display = 'flex';
         document.body.style.overflow = 'hidden';
-        var menu = document.getElementById('menuDropdown');
-        if (menu) menu.style.display = 'none';
+        const menu = document.getElementById('menuDropdown');
+        if (menu) menu.classList.remove('show');
     }
 }
 
 function hideForm(type) {
-    var formId = '';
+    let formId = '';
     if (type === 'add') formId = 'formAdd';
     else if (type === 'tambahSaldo') formId = 'formTambahSaldo';
     else if (type === 'aturSaldo') formId = 'formAturSaldo';
     
-    var form = document.getElementById(formId);
+    const form = document.getElementById(formId);
     if (form) {
         form.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
     
-    if (type === 'add' && window.location.search.indexOf('edit') !== -1) {
+    if (type === 'add' && window.location.search.includes('edit')) {
         window.location.href = 'index.php';
     }
 }
@@ -995,7 +1011,7 @@ function showAturSaldoForm() {
 }
 
 function formatRupiah(input) {
-    var value = input.value.replace(/[^0-9]/g, '');
+    let value = input.value.replace(/[^0-9]/g, '');
     if (value && value !== '0') {
         value = parseInt(value).toLocaleString('id-ID');
         input.value = value;
@@ -1005,23 +1021,61 @@ function formatRupiah(input) {
 }
 
 function validateForm(form) {
-    var amountInputs = form.querySelectorAll('input[name="amount"], input[name="saldo"]');
-    for (var i = 0; i < amountInputs.length; i++) {
-        var input = amountInputs[i];
+    const amountInputs = form.querySelectorAll('input[name="amount"], input[name="saldo"]');
+    for (let i = 0; i < amountInputs.length; i++) {
+        const input = amountInputs[i];
         if (input && input.value) {
-            var rawValue = input.value.replace(/\./g, '');
-            input.value = rawValue;
+            input.value = input.value.replace(/\./g, '');
         }
     }
     return true;
 }
 
+function toggleSelectMode() {
+    selectMode = !selectMode;
+    const checkboxes = document.querySelectorAll('.transaction-checkbox');
+    const actions = document.getElementById('multiSelectActions');
+    const btn = document.querySelector('.btn-select');
+    
+    checkboxes.forEach(cb => {
+        cb.style.display = selectMode ? 'inline-block' : 'none';
+    });
+    
+    actions.style.display = selectMode ? 'flex' : 'none';
+    btn.textContent = selectMode ? 'Selesai' : 'Pilih';
+}
+
+function cancelMultiSelect() {
+    const checkboxes = document.querySelectorAll('.transaction-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+        cb.style.display = 'none';
+        cb.closest('.transaction-item')?.classList.remove('selected');
+    });
+    document.getElementById('multiSelectActions').style.display = 'none';
+    selectMode = false;
+    const btn = document.querySelector('.btn-select');
+    btn.textContent = 'Pilih';
+}
+
+// Highlight selected transaction
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('transaction-checkbox')) {
+        const item = e.target.closest('.transaction-item');
+        if (e.target.checked) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    }
+});
+
 // Close menu when clicking outside
 document.addEventListener('click', function(event) {
-    var menu = document.getElementById('menuDropdown');
-    var menuBtn = document.querySelector('.menu-btn');
+    const menu = document.getElementById('menuDropdown');
+    const menuBtn = document.querySelector('.menu-btn');
     if (menu && menuBtn && !menu.contains(event.target) && !menuBtn.contains(event.target)) {
-        menu.style.display = 'none';
+        menu.classList.remove('show');
     }
 });
 
