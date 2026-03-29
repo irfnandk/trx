@@ -1,540 +1,186 @@
 <?php
-// index.php
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
+// includes/supabase.php
 
-require_once 'includes/header.php';
+class SupabaseDB {
+    private $url;
+    private $api_key;
+    private $headers;
 
-// Get database instance
-$db = getDB();
-
-// Handle CRUD Operations
-$message = '';
-$message_type = '';
-
-// TAMBAH SALDO
-if (isset($_POST['action']) && $_POST['action'] === 'tambah_saldo') {
-    $saldo = str_replace(['.', ','], ['', '.'], $_POST['saldo']);
-    $saldo_numeric = floatval($saldo);
-    
-    if ($saldo_numeric > 0) {
-        $result = $db->tambahSaldo($saldo_numeric);
-        $redirect = $result ? 'saldo_added' : 'error';
-        header("Location: index.php?$redirect=1");
-        exit;
-    } else {
-        header("Location: index.php?error=1");
-        exit;
-    }
-}
-
-// Update Saldo
-if (isset($_POST['action']) && $_POST['action'] === 'update_saldo') {
-    $saldo = str_replace(['.', ','], ['', '.'], $_POST['saldo']);
-    $db->updateSaldo(floatval($saldo));
-    header('Location: index.php?saldo_updated=1');
-    exit;
-}
-
-// Create Expense
-if (isset($_POST['action']) && $_POST['action'] === 'create') {
-    $amount = str_replace(['.', ','], ['', '.'], $_POST['amount']);
-    $data = [
-        'category_id' => intval($_POST['category_id'] ?? 0),
-        'amount'      => floatval($amount),
-        'description' => $_POST['description'] ?? '',
-        'expense_date'=> $_POST['expense_date'] ?? date('Y-m-d')
-    ];
-    
-    $result = $db->insertExpense($data);
-    
-    if ($result && isset($_POST['print_receipt'])) {
-        $last_id = $db->lastInsertId();
-        header("Location: receipt.php?id=" . $last_id . "&auto_print=1");
-        exit;
-    }
-    
-    $redirect = $result ? 'success' : 'error';
-    header("Location: index.php?$redirect=1");
-    exit;
-}
-
-// Update Expense
-if (isset($_POST['action']) && $_POST['action'] === 'update') {
-    $id = intval($_POST['id'] ?? 0);
-    $amount = str_replace(['.', ','], ['', '.'], $_POST['amount']);
-    $data = [
-        'category_id' => intval($_POST['category_id'] ?? 0),
-        'amount'      => floatval($amount),
-        'description' => $_POST['description'] ?? '',
-        'expense_date'=> $_POST['expense_date'] ?? date('Y-m-d')
-    ];
-    
-    $result = $db->updateExpense($id, $data);
-    
-    if ($result && isset($_POST['print_receipt'])) {
-        header("Location: receipt.php?id=" . $id . "&auto_print=1");
-        exit;
-    }
-    
-    $redirect = $result ? 'updated' : 'error';
-    header("Location: index.php?$redirect=1");
-    exit;
-}
-
-// Delete Expense
-if (isset($_GET['delete'])) {
-    $id = intval($_GET['delete']);
-    $result = $db->deleteExpense($id);
-    $redirect = $result ? 'deleted' : 'error';
-    header("Location: index.php?$redirect=1");
-    exit;
-}
-
-// Get data
-$edit_data = null;
-if (isset($_GET['edit'])) {
-    $id = intval($_GET['edit']);
-    $edit_data = $db->getExpense($id);
-}
-
-$expenses = $db->selectExpenses();
-$categories = $db->getCategories();
-
-if (!is_array($categories)) {
-    $categories = [];
-}
-
-if (empty($categories)) {
-    $categories = [
-        ['id' => 1, 'name' => 'Makanan & Minuman'],
-        ['id' => 2, 'name' => 'Transportasi'],
-        ['id' => 3, 'name' => 'Belanja'],
-        ['id' => 4, 'name' => 'Hiburan'],
-        ['id' => 5, 'name' => 'Kesehatan'],
-        ['id' => 6, 'name' => 'Pendidikan'],
-        ['id' => 7, 'name' => 'Tagihan'],
-        ['id' => 8, 'name' => 'Lainnya']
-    ];
-}
-
-$categories_map = [];
-foreach ($categories as $cat) {
-    if (isset($cat['id']) && isset($cat['name'])) {
-        $categories_map[$cat['id']] = $cat['name'];
-    }
-}
-
-$saldo_awal = $db->getSaldo();
-$total_pengeluaran = $db->getTotalPengeluaran();
-$sisa_saldo = $saldo_awal - $total_pengeluaran;
-
-$bulan_ini = date('Y-m');
-$hari_ini = date('Y-m-d');
-$total_bulan_ini = 0;
-$total_hari_ini = 0;
-$transaksi_count = is_array($expenses) ? count($expenses) : 0;
-$pengeluaran_terbesar = 0;
-
-if (is_array($expenses)) {
-    foreach ($expenses as $expense) {
-        $amount = floatval($expense['amount'] ?? 0);
-        $date = $expense['expense_date'] ?? '';
+    public function __construct() {
+        // Ganti dengan URL dan API Key Supabase Anda
+        $this->url = "https://padgfrtvxpwezpikdwmc.supabase.co";
+        $this->api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZGdmcnR2eHB3ZXpwaWtkd21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4OTEyNDYsImV4cCI6MjA4OTQ2NzI0Nn0.0gXZdVzN11u0JvBYXgHJhB3vuhxskI7ZsAUWp7dI0I0";
         
-        if (strpos($date, $bulan_ini) === 0) $total_bulan_ini += $amount;
-        if ($date === $hari_ini) $total_hari_ini += $amount;
-        if ($amount > $pengeluaran_terbesar) $pengeluaran_terbesar = $amount;
+        $this->headers = [
+            "Content-Type: application/json",
+            "Authorization: Bearer " . $this->api_key,
+            "apikey: " . $this->api_key,
+            "Prefer: return=representation"
+        ];
+    }
+
+    private function request($method, $endpoint, $data = null) {
+        $url = $this->url . $endpoint;
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        
+        if ($data && ($method === 'POST' || $method === 'PATCH')) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        }
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        
+        curl_close($ch);
+        
+        if ($error) {
+            error_log("CURL Error: " . $error);
+            return false;
+        }
+        
+        if ($httpCode >= 200 && $httpCode < 300) {
+            if (!empty($response)) {
+                return json_decode($response, true);
+            }
+            return true;
+        }
+        
+        error_log("HTTP Error: " . $httpCode . " - " . $response);
+        return false;
+    }
+
+    // ==================== EXPENSES ====================
+    
+    public function selectExpenses($limit = 100) {
+        $result = $this->request('GET', "/rest/v1/expenses?select=*&order=expense_date.desc&limit={$limit}");
+        return is_array($result) ? $result : [];
+    }
+
+    public function getExpense($id) {
+        $result = $this->request('GET', "/rest/v1/expenses?id=eq.{$id}&select=*");
+        if (is_array($result) && count($result) > 0) {
+            return $result[0];
+        }
+        return null;
+    }
+
+    public function insertExpense($data) {
+        $expenseData = [
+            'category_id' => intval($data['category_id']),
+            'amount' => floatval($data['amount']),
+            'description' => $data['description'] ?? '',
+            'expense_date' => $data['expense_date']
+        ];
+        
+        $result = $this->request('POST', "/rest/v1/expenses", $expenseData);
+        return $result !== false;
+    }
+
+    public function updateExpense($id, $data) {
+        $expenseData = [
+            'category_id' => intval($data['category_id']),
+            'amount' => floatval($data['amount']),
+            'description' => $data['description'] ?? '',
+            'expense_date' => $data['expense_date']
+        ];
+        
+        $result = $this->request('PATCH', "/rest/v1/expenses?id=eq.{$id}", $expenseData);
+        return $result !== false;
+    }
+
+    public function deleteExpense($id) {
+        $result = $this->request('DELETE', "/rest/v1/expenses?id=eq.{$id}");
+        return $result !== false;
+    }
+
+    public function lastInsertId() {
+        $result = $this->request('GET', "/rest/v1/expenses?select=id&order=id.desc&limit=1");
+        if (is_array($result) && count($result) > 0) {
+            return $result[0]['id'];
+        }
+        return 0;
+    }
+
+    // ==================== CATEGORIES ====================
+    
+    public function getCategories() {
+        $result = $this->request('GET', "/rest/v1/categories?select=*&order=name");
+        return is_array($result) ? $result : [];
+    }
+    
+    public function insertCategory($name) {
+        $result = $this->request('POST', "/rest/v1/categories", ['name' => $name]);
+        return $result !== false;
+    }
+    
+    public function insertDefaultCategories() {
+        $defaultCategories = [
+            ['name' => 'Makanan & Minuman'],
+            ['name' => 'Transportasi'],
+            ['name' => 'Belanja'],
+            ['name' => 'Hiburan'],
+            ['name' => 'Kesehatan'],
+            ['name' => 'Pendidikan'],
+            ['name' => 'Tagihan'],
+            ['name' => 'Lainnya']
+        ];
+        
+        foreach ($defaultCategories as $cat) {
+            $this->request('POST', "/rest/v1/categories", $cat);
+        }
+    }
+
+    // ==================== SALDO ====================
+    
+    public function tambahSaldo($amount) {
+        $current_saldo = $this->getSaldo();
+        $new_saldo = $current_saldo + $amount;
+        return $this->updateSaldo($new_saldo);
+    }
+
+    public function getSaldo() {
+        $result = $this->request('GET', "/rest/v1/saldo?select=amount&limit=1");
+        if (is_array($result) && count($result) > 0) {
+            return floatval($result[0]['amount'] ?? 0);
+        }
+        return 0;
+    }
+
+    public function updateSaldo($amount) {
+        $existing = $this->request('GET', "/rest/v1/saldo?select=id&limit=1");
+        
+        if (is_array($existing) && count($existing) > 0) {
+            return $this->request('PATCH', "/rest/v1/saldo?id=eq.{$existing[0]['id']}", ['amount' => $amount]);
+        } else {
+            return $this->request('POST', "/rest/v1/saldo", ['amount' => $amount]);
+        }
+    }
+
+    public function getTotalPengeluaran() {
+        $result = $this->request('GET', "/rest/v1/expenses?select=amount");
+        $total = 0;
+        if (is_array($result)) {
+            foreach ($result as $row) {
+                $total += floatval($row['amount'] ?? 0);
+            }
+        }
+        return $total;
     }
 }
 
-$rata_rata = $transaksi_count > 0 ? round($total_pengeluaran / $transaksi_count) : 0;
-
-$msg_map = [
-    'success' => 'Pengeluaran berhasil ditambahkan',
-    'updated' => 'Pengeluaran berhasil diupdate',
-    'deleted' => 'Pengeluaran berhasil dihapus',
-    'saldo_updated' => 'Saldo awal berhasil diupdate',
-    'saldo_added' => 'Saldo berhasil ditambahkan',
-    'error' => 'Gagal memproses data'
-];
-
-foreach ($msg_map as $key => $msg) {
-    if (isset($_GET[$key])) {
-        $message = $msg;
-        $message_type = ($key === 'error') ? 'error' : 'success';
-        break;
+// Fungsi helper
+function supabaseDB() {
+    static $db = null;
+    if ($db === null) {
+        $db = new SupabaseDB();
     }
+    return $db;
 }
-
-$recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 10) : [];
 ?>
-
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aplikasi Keuangan</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fb;
-            color: #1e293b;
-            line-height: 1.5;
-        }
-        .app { max-width: 480px; margin: 0 auto; padding: 20px 16px 32px; min-height: 100vh; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .header h1 { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #1e293b, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .header-date { font-size: 13px; color: #64748b; margin-top: 4px; }
-        .menu-btn { background: white; border: 1px solid #e2e8f0; width: 44px; height: 44px; border-radius: 12px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .menu-btn:active { background: #f1f5f9; transform: scale(0.95); }
-        .menu-dropdown { display: none; background: white; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px; overflow: hidden; }
-        .menu-dropdown.show { display: block; }
-        .menu-item { display: block; padding: 14px 20px; text-decoration: none; color: #1e293b; border-bottom: 1px solid #f1f5f9; font-size: 15px; font-weight: 500; }
-        .menu-item:active { background: #f8fafc; }
-        .menu-item:last-child { border-bottom: none; }
-        .menu-item.active { background: #f1f5f9; color: #0f172a; }
-        .saldo-card { background: linear-gradient(135deg, #0f172a, #1e293b); color: white; border-radius: 24px; padding: 24px; margin-bottom: 20px; }
-        .saldo-label { font-size: 13px; opacity: 0.8; margin-bottom: 8px; text-transform: uppercase; }
-        .saldo-nominal { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
-        .saldo-detail { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.8; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.15); }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
-        .stat-item { background: white; border-radius: 16px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; }
-        .stat-label { font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase; font-weight: 500; }
-        .stat-value { font-size: 14px; font-weight: 700; color: #0f172a; }
-        .quick-actions { display: flex; gap: 12px; margin-bottom: 28px; }
-        .action-btn { flex: 1; padding: 14px 12px; border-radius: 40px; font-size: 14px; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer; border: none; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .action-btn:active { transform: scale(0.97); }
-        .action-btn.primary { background: #0f172a; color: white; }
-        .action-btn.secondary { background: white; color: #0f172a; border: 1px solid #e2e8f0; }
-        .btn-select { background: #3b82f6; border: none; color: white; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
-        .btn-select:active { transform: scale(0.95); }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .section-header h3 { font-size: 18px; font-weight: 600; color: #0f172a; }
-        .view-all { color: #3b82f6; text-decoration: none; font-size: 13px; font-weight: 500; padding: 6px 12px; }
-        .transaction-list { background: white; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; }
-        .transaction-item { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid #f1f5f9; }
-        .transaction-item:last-child { border-bottom: none; }
-        .transaction-item.selected { background: #e8f0fe; }
-        .transaction-left { display: flex; gap: 12px; flex: 1; align-items: center; }
-        .transaction-checkbox { width: 20px; height: 20px; display: none; margin-right: 4px; accent-color: #3b82f6; cursor: pointer; }
-        .transaction-date { text-align: center; min-width: 48px; }
-        .date-day { display: block; font-size: 20px; font-weight: 700; color: #0f172a; }
-        .date-month { font-size: 10px; color: #64748b; text-transform: uppercase; }
-        .transaction-category { font-weight: 600; color: #0f172a; margin-bottom: 4px; font-size: 14px; }
-        .transaction-desc { font-size: 12px; color: #64748b; }
-        .transaction-right { text-align: right; }
-        .transaction-amount { font-weight: 700; color: #dc2626; margin-bottom: 8px; font-size: 14px; }
-        .transaction-actions { display: flex; gap: 12px; justify-content: flex-end; }
-        .action-edit, .action-delete, .action-print { text-decoration: none; font-size: 12px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
-        .action-edit { background: #f1f5f9; color: #0f172a; }
-        .action-print { background: #e8f0fe; color: #3b82f6; }
-        .action-delete { background: #fee2e2; color: #dc2626; }
-        .insight-card { background: #fef9e3; border-radius: 16px; padding: 16px; margin-top: 16px; border: 1px solid #fde68a; }
-        .insight-label { font-size: 12px; color: #92400e; margin-bottom: 4px; font-weight: 500; }
-        .insight-value { font-size: 18px; font-weight: 700; color: #78350f; }
-        .empty-state { text-align: center; padding: 48px 24px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; }
-        .empty-state p { color: #64748b; margin-bottom: 8px; }
-        .notification { padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; position: relative; padding-right: 48px; font-size: 14px; }
-        .notification-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .notification-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .notification-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; padding: 8px; }
-        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; z-index: 1000; }
-        .modal-content { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 24px 20px 32px; max-height: 85vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .modal-header h3 { font-size: 20px; font-weight: 600; color: #0f172a; }
-        .modal-close { background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
-        .input-group { margin-bottom: 20px; }
-        .input-label { display: block; font-size: 14px; font-weight: 500; color: #334155; margin-bottom: 8px; }
-        .modal-input { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; background: #f8fafc; }
-        .modal-input:focus { outline: none; border-color: #3b82f6; }
-        select.modal-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 44px; }
-        .print-option { margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 12px; }
-        .checkbox-label { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .checkbox-label input { width: 18px; height: 18px; accent-color: #0f172a; }
-        .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
-        .modal-btn { flex: 1; padding: 14px; border: none; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .modal-btn.primary { background: #0f172a; color: white; }
-        .modal-btn.secondary { background: #f1f5f9; color: #0f172a; }
-        #multiSelectActions { display: flex; gap: 12px; margin-top: 16px; }
-        small { font-size: 12px; display: block; margin-top: 6px; color: #64748b; }
-    </style>
-</head>
-<body>
-<div class="app">
-    <div class="header">
-        <div>
-            <h1>Keuangan</h1>
-            <div class="header-date"><?php echo date('l, d M Y'); ?></div>
-        </div>
-        <button class="menu-btn" onclick="toggleMenu()">☰</button>
-    </div>
-
-    <div class="menu-dropdown" id="menuDropdown">
-        <a href="index.php" class="menu-item active">Dashboard</a>
-        <a href="report.php" class="menu-item">Laporan</a>
-        <a href="#" onclick="showTambahSaldoForm(); return false;" class="menu-item">Tambah Saldo</a>
-        <a href="#" onclick="showAturSaldoForm(); return false;" class="menu-item">Atur Saldo Awal</a>
-    </div>
-
-    <div class="saldo-card">
-        <div class="saldo-label">Sisa Saldo</div>
-        <div class="saldo-nominal">Rp <?php echo number_format($sisa_saldo, 0, ',', '.'); ?></div>
-        <div class="saldo-detail">
-            <span>Saldo Awal: Rp <?php echo number_format($saldo_awal, 0, ',', '.'); ?></span>
-            <span>Total Keluar: Rp <?php echo number_format($total_pengeluaran, 0, ',', '.'); ?></span>
-        </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-item"><div class="stat-label">Bulan Ini</div><div class="stat-value">Rp <?php echo number_format($total_bulan_ini, 0, ',', '.'); ?></div></div>
-        <div class="stat-item"><div class="stat-label">Hari Ini</div><div class="stat-value">Rp <?php echo number_format($total_hari_ini, 0, ',', '.'); ?></div></div>
-        <div class="stat-item"><div class="stat-label">Rata-rata</div><div class="stat-value">Rp <?php echo number_format($rata_rata, 0, ',', '.'); ?></div></div>
-        <div class="stat-item"><div class="stat-label">Transaksi</div><div class="stat-value"><?php echo $transaksi_count; ?>x</div></div>
-    </div>
-
-    <div class="quick-actions">
-        <button class="action-btn primary" onclick="showForm('add')">+ Tambah</button>
-        <button class="action-btn secondary" onclick="showTambahSaldoForm()">Tambah Saldo</button>
-        <a href="report.php" class="action-btn secondary">Laporan</a>
-    </div>
-
-    <!-- Form Tambah Saldo -->
-    <div id="formTambahSaldo" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Tambah Saldo</h3><button class="modal-close" onclick="hideForm('tambahSaldo')">×</button></div>
-            <form method="POST" onsubmit="return validateForm(this)">
-                <input type="hidden" name="action" value="tambah_saldo">
-                <div class="input-group">
-                    <label class="input-label">Nominal Tambahan</label>
-                    <input type="text" class="modal-input" name="saldo" placeholder="Masukkan nominal saldo" onkeyup="formatRupiah(this)" autocomplete="off" required>
-                    <small>Saldo saat ini: Rp <?php echo number_format($saldo_awal, 0, ',', '.'); ?></small>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="modal-btn secondary" onclick="hideForm('tambahSaldo')">Batal</button>
-                    <button type="submit" class="modal-btn primary">Tambah Saldo</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Form Atur Saldo Awal -->
-    <div id="formAturSaldo" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Atur Saldo Awal</h3><button class="modal-close" onclick="hideForm('aturSaldo')">×</button></div>
-            <form method="POST" onsubmit="return validateForm(this)">
-                <input type="hidden" name="action" value="update_saldo">
-                <div class="input-group">
-                    <label class="input-label">Saldo Awal Baru</label>
-                    <input type="text" class="modal-input" name="saldo" value="<?php echo number_format($saldo_awal, 0, ',', '.'); ?>" placeholder="Masukkan saldo awal baru" onkeyup="formatRupiah(this)" autocomplete="off" required>
-                    <small style="color:#dc2626;">Perhatian: Ini akan mengatur ulang saldo awal</small>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="modal-btn secondary" onclick="hideForm('aturSaldo')">Batal</button>
-                    <button type="submit" class="modal-btn primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Form Add/Edit -->
-    <div id="formAdd" class="modal" style="display: <?php echo $edit_data ? 'flex' : 'none'; ?>;">
-        <div class="modal-content">
-            <div class="modal-header"><h3><?php echo $edit_data ? 'Edit' : 'Tambah'; ?> Pengeluaran</h3><button class="modal-close" onclick="hideForm('add')">×</button></div>
-            <form method="POST" onsubmit="return validateForm(this)">
-                <input type="hidden" name="action" value="<?php echo $edit_data ? 'update' : 'create'; ?>">
-                <?php if ($edit_data): ?><input type="hidden" name="id" value="<?php echo $edit_data['id']; ?>"><?php endif; ?>
-                <div class="input-group">
-                    <label class="input-label">Kategori</label>
-                    <select name="category_id" class="modal-input" required>
-                        <option value="">Pilih Kategori</option>
-                        <?php foreach ($categories as $cat): ?>
-                            <option value="<?php echo $cat['id']; ?>" <?php echo ($edit_data && $edit_data['category_id'] == $cat['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($cat['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Jumlah</label>
-                    <input type="text" class="modal-input" name="amount" required value="<?php echo $edit_data ? number_format($edit_data['amount'], 0, ',', '.') : ''; ?>" placeholder="0" onkeyup="formatRupiah(this)">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Keterangan</label>
-                    <input type="text" class="modal-input" name="description" value="<?php echo htmlspecialchars($edit_data['description'] ?? ''); ?>" placeholder="Contoh: Belanja bulanan">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Tanggal</label>
-                    <input type="date" class="modal-input" name="expense_date" value="<?php echo $edit_data['expense_date'] ?? date('Y-m-d'); ?>" required>
-                </div>
-                <div class="print-option">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="print_receipt" value="1" <?php echo !$edit_data ? 'checked' : ''; ?>>
-                        <span>Cetak struk setelah simpan</span>
-                    </label>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="modal-btn secondary" onclick="hideForm('add')">Batal</button>
-                    <button type="submit" class="modal-btn primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <?php if ($message): ?>
-    <div class="notification notification-<?php echo $message_type; ?>">
-        <span><?php echo $message; ?></span>
-        <button class="notification-close" onclick="this.parentElement.remove()">×</button>
-    </div>
-    <?php endif; ?>
-
-    <!-- Recent Transactions -->
-    <div class="recent-section">
-        <div class="section-header">
-            <h3>Transaksi Terbaru</h3>
-            <div>
-                <button class="btn-select" id="selectModeBtn" onclick="toggleSelectMode()">Pilih</button>
-                <a href="report.php" class="view-all">Lihat Semua</a>
-            </div>
-        </div>
-
-        <form method="GET" action="multi_receipt.php" id="multiSelectForm">
-            <div class="transaction-list">
-                <?php if (empty($recent_expenses)): ?>
-                    <div class="empty-state"><p>Belum ada transaksi</p><p style="font-size:12px;">Klik tombol Tambah untuk mencatat pengeluaran</p></div>
-                <?php else: ?>
-                    <?php foreach ($recent_expenses as $e): ?>
-                        <div class="transaction-item" data-id="<?php echo $e['id']; ?>">
-                            <div class="transaction-left">
-                                <input type="checkbox" name="ids[]" value="<?php echo $e['id']; ?>" class="transaction-checkbox" id="cb_<?php echo $e['id']; ?>">
-                                <div class="transaction-date">
-                                    <span class="date-day"><?php echo date('d', strtotime($e['expense_date'])); ?></span>
-                                    <span class="date-month"><?php echo date('M', strtotime($e['expense_date'])); ?></span>
-                                </div>
-                                <div class="transaction-info">
-                                    <div class="transaction-category"><?php echo isset($categories_map[$e['category_id']]) ? $categories_map[$e['category_id']] : 'Lainnya'; ?></div>
-                                    <?php if (!empty($e['description'])): ?><div class="transaction-desc"><?php echo htmlspecialchars($e['description']); ?></div><?php endif; ?>
-                                </div>
-                            </div>
-                            <div class="transaction-right">
-                                <div class="transaction-amount">Rp <?php echo number_format($e['amount'] ?? 0, 0, ',', '.'); ?></div>
-                                <div class="transaction-actions">
-                                    <a href="?edit=<?php echo $e['id']; ?>" class="action-edit">Edit</a>
-                                    <a href="receipt.php?id=<?php echo $e['id']; ?>" class="action-print" target="_blank">Struk</a>
-                                    <a href="?delete=<?php echo $e['id']; ?>" class="action-delete" onclick="return confirm('Hapus transaksi ini?')">Hapus</a>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
-            
-            <div id="multiSelectActions" style="display: none; margin-top: 16px;">
-                <button type="submit" class="action-btn secondary" style="background:#3b82f6; color:white; border:none;">Cetak Gabungan</button>
-                <button type="button" class="action-btn secondary" onclick="cancelMultiSelect()">Batal</button>
-            </div>
-        </form>
-
-        <?php if ($pengeluaran_terbesar > 0): ?>
-        <div class="insight-card"><div class="insight-label">Pengeluaran Terbesar</div><div class="insight-value">Rp <?php echo number_format($pengeluaran_terbesar, 0, ',', '.'); ?></div></div>
-        <?php endif; ?>
-    </div>
-</div>
-
-<script>
-let selectMode = false;
-
-function toggleMenu() {
-    const menu = document.getElementById('menuDropdown');
-    if (menu) menu.classList.toggle('show');
-}
-
-function showForm(type) {
-    let formId = type === 'add' ? 'formAdd' : (type === 'tambahSaldo' ? 'formTambahSaldo' : 'formAturSaldo');
-    const form = document.getElementById(formId);
-    if (form) {
-        form.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        document.getElementById('menuDropdown')?.classList.remove('show');
-    }
-}
-
-function hideForm(type) {
-    let formId = type === 'add' ? 'formAdd' : (type === 'tambahSaldo' ? 'formTambahSaldo' : 'formAturSaldo');
-    const form = document.getElementById(formId);
-    if (form) {
-        form.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-    if (type === 'add' && window.location.search.includes('edit')) window.location.href = 'index.php';
-}
-
-function showTambahSaldoForm() { showForm('tambahSaldo'); }
-function showAturSaldoForm() { showForm('aturSaldo'); }
-
-function formatRupiah(input) {
-    let value = input.value.replace(/[^0-9]/g, '');
-    if (value && value !== '0') input.value = parseInt(value).toLocaleString('id-ID');
-    else input.value = '';
-}
-
-function validateForm(form) {
-    const amountInputs = form.querySelectorAll('input[name="amount"], input[name="saldo"]');
-    amountInputs.forEach(input => { if (input && input.value) input.value = input.value.replace(/\./g, ''); });
-    return true;
-}
-
-function toggleSelectMode() {
-    selectMode = !selectMode;
-    const checkboxes = document.querySelectorAll('.transaction-checkbox');
-    const actions = document.getElementById('multiSelectActions');
-    const btn = document.getElementById('selectModeBtn');
-    
-    checkboxes.forEach(cb => {
-        cb.style.display = selectMode ? 'inline-block' : 'none';
-        if (!selectMode) {
-            cb.checked = false;
-            cb.closest('.transaction-item')?.classList.remove('selected');
-        }
-    });
-    
-    actions.style.display = selectMode ? 'flex' : 'none';
-    btn.textContent = selectMode ? 'Selesai' : 'Pilih';
-    btn.style.background = selectMode ? '#dc2626' : '#3b82f6';
-}
-
-function cancelMultiSelect() {
-    const checkboxes = document.querySelectorAll('.transaction-checkbox');
-    const btn = document.getElementById('selectModeBtn');
-    
-    checkboxes.forEach(cb => {
-        cb.checked = false;
-        cb.style.display = 'none';
-        cb.closest('.transaction-item')?.classList.remove('selected');
-    });
-    
-    document.getElementById('multiSelectActions').style.display = 'none';
-    selectMode = false;
-    btn.textContent = 'Pilih';
-    btn.style.background = '#3b82f6';
-}
-
-document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('transaction-checkbox')) {
-        const item = e.target.closest('.transaction-item');
-        if (e.target.checked) item.classList.add('selected');
-        else item.classList.remove('selected');
-    }
-});
-
-document.addEventListener('click', function(event) {
-    const menu = document.getElementById('menuDropdown');
-    const menuBtn = document.querySelector('.menu-btn');
-    if (menu && menuBtn && !menu.contains(event.target) && !menuBtn.contains(event.target)) menu.classList.remove('show');
-});
-
-<?php if ($edit_data): ?>
-window.addEventListener('load', function() { showForm('add'); });
-<?php endif; ?>
-</script>
-</body>
-</html>
