@@ -7,7 +7,6 @@ class SupabaseDB {
     private $headers;
 
     public function __construct() {
-        // Ganti dengan URL dan API Key Supabase Anda
         $this->url = "https://padgfrtvxpwezpikdwmc.supabase.co";
         $this->api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZGdmcnR2eHB3ZXpwaWtkd21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4OTEyNDYsImV4cCI6MjA4OTQ2NzI0Nn0.0gXZdVzN11u0JvBYXgHJhB3vuhxskI7ZsAUWp7dI0I0";
         
@@ -76,7 +75,8 @@ class SupabaseDB {
             'category_id' => intval($data['category_id']),
             'amount' => floatval($data['amount']),
             'description' => $data['description'] ?? '',
-            'expense_date' => $data['expense_date']
+            'expense_date' => $data['expense_date'],
+            'source' => $data['source'] ?? 'online' // online atau cash
         ];
         
         $result = $this->request('POST', "/rest/v1/expenses", $expenseData);
@@ -88,7 +88,8 @@ class SupabaseDB {
             'category_id' => intval($data['category_id']),
             'amount' => floatval($data['amount']),
             'description' => $data['description'] ?? '',
-            'expense_date' => $data['expense_date']
+            'expense_date' => $data['expense_date'],
+            'source' => $data['source'] ?? 'online'
         ];
         
         $result = $this->request('PATCH', "/rest/v1/expenses?id=eq.{$id}", $expenseData);
@@ -114,55 +115,89 @@ class SupabaseDB {
         $result = $this->request('GET', "/rest/v1/categories?select=*&order=name");
         return is_array($result) ? $result : [];
     }
-    
-    public function insertCategory($name) {
-        $result = $this->request('POST', "/rest/v1/categories", ['name' => $name]);
-        return $result !== false;
-    }
-    
-    public function insertDefaultCategories() {
-        $defaultCategories = [
-            ['name' => 'Makanan & Minuman'],
-            ['name' => 'Transportasi'],
-            ['name' => 'Belanja'],
-            ['name' => 'Hiburan'],
-            ['name' => 'Kesehatan'],
-            ['name' => 'Pendidikan'],
-            ['name' => 'Tagihan'],
-            ['name' => 'Lainnya']
-        ];
-        
-        foreach ($defaultCategories as $cat) {
-            $this->request('POST', "/rest/v1/categories", $cat);
-        }
-    }
 
     // ==================== SALDO ====================
     
-    public function tambahSaldo($amount) {
-        $current_saldo = $this->getSaldo();
+    // Tambah saldo online
+    public function tambahSaldoOnline($amount) {
+        $current_saldo = $this->getSaldoOnline();
         $new_saldo = $current_saldo + $amount;
-        return $this->updateSaldo($new_saldo);
+        return $this->updateSaldoOnline($new_saldo);
     }
-
-    public function getSaldo() {
-        $result = $this->request('GET', "/rest/v1/saldo?select=amount&limit=1");
+    
+    // Tambah saldo cash
+    public function tambahSaldoCash($amount) {
+        $current_saldo = $this->getSaldoCash();
+        $new_saldo = $current_saldo + $amount;
+        return $this->updateSaldoCash($new_saldo);
+    }
+    
+    // Get saldo online
+    public function getSaldoOnline() {
+        $result = $this->request('GET', "/rest/v1/saldo_online?select=amount&limit=1");
         if (is_array($result) && count($result) > 0) {
             return floatval($result[0]['amount'] ?? 0);
         }
         return 0;
     }
-
-    public function updateSaldo($amount) {
-        $existing = $this->request('GET', "/rest/v1/saldo?select=id&limit=1");
+    
+    // Get saldo cash
+    public function getSaldoCash() {
+        $result = $this->request('GET', "/rest/v1/saldo_cash?select=amount&limit=1");
+        if (is_array($result) && count($result) > 0) {
+            return floatval($result[0]['amount'] ?? 0);
+        }
+        return 0;
+    }
+    
+    // Update saldo online
+    public function updateSaldoOnline($amount) {
+        $existing = $this->request('GET', "/rest/v1/saldo_online?select=id&limit=1");
         
         if (is_array($existing) && count($existing) > 0) {
-            return $this->request('PATCH', "/rest/v1/saldo?id=eq.{$existing[0]['id']}", ['amount' => $amount]);
+            return $this->request('PATCH', "/rest/v1/saldo_online?id=eq.{$existing[0]['id']}", ['amount' => $amount]);
         } else {
-            return $this->request('POST', "/rest/v1/saldo", ['amount' => $amount]);
+            return $this->request('POST', "/rest/v1/saldo_online", ['amount' => $amount]);
         }
     }
-
+    
+    // Update saldo cash
+    public function updateSaldoCash($amount) {
+        $existing = $this->request('GET', "/rest/v1/saldo_cash?select=id&limit=1");
+        
+        if (is_array($existing) && count($existing) > 0) {
+            return $this->request('PATCH', "/rest/v1/saldo_cash?id=eq.{$existing[0]['id']}", ['amount' => $amount]);
+        } else {
+            return $this->request('POST', "/rest/v1/saldo_cash", ['amount' => $amount]);
+        }
+    }
+    
+    // Kurangi saldo berdasarkan sumber
+    public function kurangiSaldo($amount, $source) {
+        if ($source === 'online') {
+            $current = $this->getSaldoOnline();
+            $new = $current - $amount;
+            return $this->updateSaldoOnline($new);
+        } else {
+            $current = $this->getSaldoCash();
+            $new = $current - $amount;
+            return $this->updateSaldoCash($new);
+        }
+    }
+    
+    // Get total pengeluaran berdasarkan sumber
+    public function getTotalPengeluaranBySource($source) {
+        $result = $this->request('GET', "/rest/v1/expenses?select=amount&source=eq.{$source}");
+        $total = 0;
+        if (is_array($result)) {
+            foreach ($result as $row) {
+                $total += floatval($row['amount'] ?? 0);
+            }
+        }
+        return $total;
+    }
+    
+    // Get total pengeluaran semua
     public function getTotalPengeluaran() {
         $result = $this->request('GET', "/rest/v1/expenses?select=amount");
         $total = 0;
