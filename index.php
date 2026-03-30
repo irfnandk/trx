@@ -137,11 +137,6 @@ if (isset($_GET['delete'])) {
     $expense = $db->getExpense($id);
     $result = $db->deleteExpense($id);
     
-    if ($result && $expense) {
-        // Kembalikan saldo
-        $db->tambahSaldo($expense['amount'], $expense['source']);
-    }
-    
     $redirect = $result ? 'deleted' : 'error';
     header("Location: index.php?$redirect=1");
     exit;
@@ -302,7 +297,9 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 10) : [];
         .date-month { font-size: 9px; color: #64748b; text-transform: uppercase; }
         .transaction-category { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
         .transaction-desc { font-size: 11px; color: #64748b; }
-        .transaction-source { font-size: 10px; color: #3b82f6; margin-top: 2px; }
+        .transaction-source { font-size: 10px; margin-top: 2px; display: inline-block; padding: 2px 6px; border-radius: 10px; }
+        .transaction-source.online { background: #e8f0fe; color: #1e293b; }
+        .transaction-source.cash { background: #dcfce7; color: #065f46; }
         .transaction-right { text-align: right; }
         .transaction-amount { font-weight: 700; color: #dc2626; font-size: 13px; margin-bottom: 6px; }
         .transaction-actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -334,8 +331,6 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 10) : [];
         .source-options { display: flex; gap: 12px; margin: 16px 0; }
         .source-option { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
         .source-option.selected { border-color: #3b82f6; background: #e8f0fe; }
-        .source-option.online { color: #1e293b; }
-        .source-option.cash { color: #065f46; }
         
         .notification { padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; position: relative; padding-right: 48px; font-size: 13px; }
         .notification-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
@@ -530,7 +525,7 @@ $recent_expenses = is_array($expenses) ? array_slice($expenses, 0, 10) : [];
                                 <div>
                                     <div class="transaction-category"><?php echo isset($categories_map[$e['category_id']]) ? $categories_map[$e['category_id']] : 'Lainnya'; ?></div>
                                     <?php if (!empty($e['description'])): ?><div class="transaction-desc"><?php echo htmlspecialchars($e['description']); ?></div><?php endif; ?>
-                                    <div class="transaction-source"><?php echo $e['source'] === 'online' ? '💳 Online' : '💰 Cash'; ?></div>
+                                    <div class="transaction-source <?php echo $e['source']; ?>"><?php echo $e['source'] === 'online' ? '💳 Online' : '💰 Cash'; ?></div>
                                 </div>
                             </div>
                             <div class="transaction-right">
@@ -566,7 +561,6 @@ function selectSource(source) {
     currentSource = source;
     document.getElementById('selectedSource').value = source;
     
-    // Update UI
     document.querySelectorAll('.source-option').forEach(opt => {
         opt.classList.remove('selected');
     });
@@ -719,7 +713,6 @@ document.getElementById('cetakGabunganBtn')?.addEventListener('click', function(
     document.getElementById('multiSelectForm').submit();
 });
 
-// Set default source selection on load
 document.addEventListener('DOMContentLoaded', function() {
     selectSource('online');
     <?php if ($edit_data): ?>
